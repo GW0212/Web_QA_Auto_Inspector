@@ -1,0 +1,19 @@
+{
+  "name": "web-qa-auto-inspector",
+  "version": "1.0.0",
+  "description": "URL 기반 웹사이트 자동 QA 리포트 생성 대시보드",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "qa",
+    "automation",
+    "web-testing",
+    "portfolio",
+    "playwright-ready"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}

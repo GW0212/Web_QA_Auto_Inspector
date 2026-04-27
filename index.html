@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web QA Auto Inspector</title>
+  <meta name="description" content="URL 기반 웹사이트 자동 QA 리포트 생성 대시보드" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Web QA Auto Inspector home">
+        <span class="brand-mark">QA</span>
+        <span>
+          <strong>Web QA Auto Inspector</strong>
+          <small>Automation Dashboard</small>
+        </span>
+      </a>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#test-items">Test Items</a>
+        <a href="#report">Report</a>
+      </nav>
+
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="현재 라이트 모드. 다크 모드로 변경">
+        <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <div class="eyebrow"><span></span> Portfolio QA Automation Tool</div>
+          <h1>URL 기반 웹사이트 자동 QA 리포트 생성기</h1>
+          <p class="hero-description">
+            공개 웹페이지 URL을 기준으로 페이지 접속, 이미지, 링크, 버튼, 반응형 UI, 콘솔 에러, SEO/접근성 기본 항목을 자동 점검하는 QA 자동화 대시보드입니다. 검사 결과는 PASS/WARN/FAIL과 Critical/Major/Minor 기준으로 정리해 반복 웹 검수 업무를 빠르게 리포트화합니다.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#dashboard">검사 시작하기</a>
+            <a class="ghost-link" href="#test-items">검사항목 보기</a>
+          </div>
+          <div class="hero-chips" aria-label="핵심 기능 요약">
+            <span>PASS/WARN/FAIL</span>
+            <span>Severity Matrix</span>
+            <span>Report Export</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="inspector-card" id="dashboard">
+        <div class="section-heading">
+          <span>Dashboard</span>
+          <h2>웹페이지 QA 검사</h2>
+          <p>로그인·결제·캡차가 없는 공개 URL을 입력하면 데모 검사 엔진이 실제 QA 리포트 형태의 결과를 생성합니다.</p>
+        </div>
+
+        <form class="url-form" id="qaForm" novalidate>
+          <label for="urlInput">검사 대상 URL</label>
+          <div class="input-row">
+            <input id="urlInput" name="url" type="url" placeholder="https://gw0212.github.io/" autocomplete="url" required />
+            <button class="run-button" type="submit">
+              <span class="button-icon">▶</span>
+              QA 검사 시작
+            </button>
+          </div>
+          <p class="form-error" id="formError" role="alert"></p>
+        </form>
+
+        <div class="example-row" aria-label="Example URLs">
+          <span>예시 URL</span>
+          <button type="button" data-example="https://gw0212.github.io/">Portfolio</button>
+          <button type="button" data-example="https://gw0212.github.io/Nexus_Play-/">Nexus Play</button>
+          <button type="button" data-example="https://gw0212.github.io/2048/">2048</button>
+          <button type="button" data-example="https://gw0212.github.io/Perfect_Stop/">Perfect Stop</button>
+          <button type="button" data-example="https://gw0212.github.io/Image_Converter/">Image Converter</button>
+        </div>
+
+        <div class="progress-area is-hidden" id="progressArea" aria-live="polite">
+          <div class="progress-header">
+            <strong>검사 진행 중</strong>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+          <ul class="progress-steps" id="progressSteps"></ul>
+        </div>
+      </section>
+
+      <section class="feature-section" id="test-items">
+        <div class="section-heading">
+          <span>Test Items</span>
+          <h2>자동 QA 검사항목</h2>
+          <p>실제 웹 검수 업무에서 반복적으로 확인하는 항목을 기준으로 구성했습니다.</p>
+        </div>
+        <div class="feature-grid">
+          <article><span>01</span><h3>페이지 접속 검사</h3><p>URL 접속 가능 여부, 상태 코드, 초기 로딩 성공 여부를 확인합니다.</p></article>
+          <article><span>02</span><h3>이미지/링크 검사</h3><p>깨진 이미지, alt 누락, 내부/외부 링크, 빈 href를 점검합니다.</p></article>
+          <article><span>03</span><h3>반응형 UI 검사</h3><p>데스크톱/모바일 화면 기준으로 가로 스크롤과 레이아웃 깨짐을 확인합니다.</p></article>
+          <article><span>04</span><h3>콘솔 에러 검사</h3><p>JavaScript 에러, 리소스 로딩 실패, 네트워크 에러를 리포트화합니다.</p></article>
+          <article><span>05</span><h3>SEO/접근성 검사</h3><p>title, description, h1, canonical, 버튼 이름, input label을 확인합니다.</p></article>
+          <article><span>06</span><h3>리포트 Export</h3><p>검사 결과를 JSON/HTML 파일로 내려받아 QA 산출물로 활용할 수 있습니다.</p></article>
+        </div>
+      </section>
+
+
+      <div class="report-zone" id="report">
+      <section class="empty-state" id="emptyState">
+        <div class="empty-icon">⌁</div>
+        <h2>아직 검사 결과가 없습니다</h2>
+        <p>URL을 입력하고 QA 검사를 시작하면 결과 요약, 상세 이슈, 항목별 리포트, 다운로드 영역이 표시됩니다.</p>
+      </section>
+
+      <section class="results-section is-hidden" id="resultsSection" aria-live="polite">
+        <div class="result-header">
+          <div>
+            <span class="section-label">Result Summary</span>
+            <h2>QA 결과 대시보드</h2>
+            <p id="resultMeta">검사 대상 URL과 실행 시간이 표시됩니다.</p>
+          </div>
+          <div class="export-actions">
+            <button type="button" id="downloadJson">JSON 다운로드</button>
+            <button type="button" id="downloadHtml">HTML 리포트</button>
+            <button type="button" id="downloadPdf" class="disabled-button">PDF 준비중</button>
+          </div>
+        </div>
+
+        <div class="summary-grid" id="summaryGrid"></div>
+
+        <div class="insight-grid score-only">
+          <article class="score-card" id="scoreCard"></article>
+        </div>
+
+        <div class="table-card">
+          <div class="card-title-row">
+            <div>
+              <span>Test Matrix</span>
+              <h3>검사항목 요약</h3>
+            </div>
+            <div class="filter-tabs" id="filterTabs" aria-label="Result filters">
+              <button type="button" class="is-active" data-filter="ALL">ALL</button>
+              <button type="button" data-filter="PASS">PASS</button>
+              <button type="button" data-filter="WARN">WARN</button>
+              <button type="button" data-filter="FAIL">FAIL</button>
+            </div>
+          </div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>검사 항목</th>
+                  <th>상태</th>
+                  <th>심각도</th>
+                  <th>핵심 결과</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="section-heading compact">
+            <span>Detailed Report</span>
+            <h2>항목별 상세 리포트</h2>
+            <p>각 항목은 검사 내용, 판정 기준, 실제 결과, 개선 방법을 포함합니다.</p>
+          </div>
+          <div class="result-list" id="resultList"></div>
+        </div>
+      </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
