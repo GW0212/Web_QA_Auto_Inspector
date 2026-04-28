@@ -3855,3 +3855,22 @@ html {
     font-size: 24px !important;
   }
 }
+
+
+/* Print safety v21: iOS/Safari PDF preview에서 배경 장식이 검정 박스로 출력되는 현상 방지 */
+@media print {
+  html, body { background: #ffffff !important; }
+  html::before, html::after, body::before, body::after {
+    content: none !important;
+    display: none !important;
+    opacity: 0 !important;
+    background: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+  .app-shell, .site-header, .toast, .hero-section, .inspector-card, .results-section, .feature-section {
+    filter: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+  }
+}

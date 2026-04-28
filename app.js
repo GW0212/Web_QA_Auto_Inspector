@@ -1272,8 +1272,10 @@ function preparePrintReport(report) {
       @page { size: A4; margin: 12mm; }
       html, body { background: #ffffff !important; width: 100% !important; min-width: 0 !important; }
       body { margin: 0 !important; padding: 0 !important; overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body::before, body::after, html::before, html::after { content: none !important; display: none !important; opacity: 0 !important; background: none !important; filter: none !important; animation: none !important; }
       body > *:not(#printReportRoot) { display: none !important; }
-      #printReportRoot { display: block !important; width: 100% !important; max-width: none !important; color: #111827 !important; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; word-break: keep-all !important; overflow-wrap: break-word !important; }
+      #printReportRoot { display: block !important; position: static !important; width: 100% !important; max-width: none !important; color: #111827 !important; background: #ffffff !important; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; word-break: keep-all !important; overflow-wrap: break-word !important; }
+      #printReportRoot, #printReportRoot * { filter: none !important; backdrop-filter: none !important; animation: none !important; transform: none !important; }
       #printReportRoot * { box-sizing: border-box !important; }
       .print-wrap { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; }
       .print-head { text-align: center !important; padding: 0 0 18px !important; border-bottom: 1px solid #e5e7eb !important; }
@@ -1293,7 +1295,8 @@ function preparePrintReport(report) {
       .print-priority li { margin-bottom: 9px !important; line-height: 1.5 !important; font-size: 12px !important; }
       .print-priority p { margin: 4px 0 0 !important; color: #334155 !important; }
       .print-result-list { display: grid !important; gap: 10px !important; }
-      .print-result { border: 1px solid #e5e7eb !important; border-radius: 16px !important; padding: 14px !important; background: #ffffff !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+      .print-result { border: 1px solid #e5e7eb !important; border-radius: 16px !important; padding: 14px !important; background: #ffffff !important; box-shadow: none !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+      .print-result::before, .print-result::after, .print-score::before, .print-score::after, .print-stat::before, .print-stat::after, .print-priority::before, .print-priority::after { content: none !important; display: none !important; }
       .print-result-top { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto !important; gap: 10px !important; align-items: start !important; }
       .print-num { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 34px !important; height: 34px !important; border-radius: 12px !important; background: #eff6ff !important; color: #2563eb !important; font-size: 12px !important; font-weight: 900 !important; }
       .print-title h3 { margin: 0 !important; font-size: 15px !important; line-height: 1.35 !important; }
@@ -1557,8 +1560,11 @@ function buildHtmlReport(report, options = {}) {
     }
     @media print {
       .no-print { display: none !important; }
-      body { background: #ffffff; padding: 0; font-size: 12px; }
-      .wrap { width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
+      html, body { background: #ffffff !important; width: 100% !important; min-width: 0 !important; }
+      body { padding: 0 !important; font-size: 12px; overflow: visible !important; }
+      body::before, body::after, html::before, html::after { content: none !important; display: none !important; opacity: 0 !important; background: none !important; filter: none !important; animation: none !important; }
+      .wrap, .wrap * { filter: none !important; backdrop-filter: none !important; animation: none !important; }
+      .wrap { width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; background: #ffffff !important; }
       h1 { font-size: 28px; }
       .score { padding: 16px 28px; }
       .score strong { font-size: 44px; }

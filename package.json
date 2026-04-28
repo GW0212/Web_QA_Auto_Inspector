@@ -1,7 +1,7 @@
 {
   "name": "web-qa-auto-inspector",
-  "version": "1.0.20",
-  "description": "URL 기반 웹사이트 자동 QA 리포트 생성 대시보드 - HTML/PDF 리포트 안정화 버전",
+  "version": "1.0.21",
+  "description": "URL 기반 웹사이트 자동 QA 리포트 생성 대시보드 - iOS PDF 검정 박스 방지 버전",
   "main": "index.html",
   "scripts": {
     "start": "npx serve ."
