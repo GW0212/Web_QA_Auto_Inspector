@@ -1,7 +1,7 @@
 {
   "name": "web-qa-auto-inspector",
-  "version": "1.0.0",
-  "description": "URL 기반 웹사이트 자동 QA 리포트 생성 대시보드",
+  "version": "1.0.14",
+  "description": "URL 기반 웹사이트 자동 QA 리포트 생성 대시보드 - 성능/보안/접근성 확장 버전",
   "main": "index.html",
   "scripts": {
     "start": "npx serve ."
