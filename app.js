@@ -1244,14 +1244,39 @@ function buildHtmlReport(report) {
     .map((item) => `<li><strong>${escapeHtml(item.name)}</strong> <span>${escapeHtml(item.status)} / ${escapeHtml(item.severity)}</span><p>${escapeHtml(item.summary)}</p></li>`)
     .join('') || '<li><strong>우선 수정 필요 이슈 없음</strong><p>현재 결과 기준으로 선행 조치 항목은 없습니다.</p></li>';
 
-  const rows = report.items.map((item) => `
-    <tr>
-      <td>${escapeHtml(item.name)}</td>
-      <td>${escapeHtml(item.status)}</td>
-      <td>${escapeHtml(item.severity)}</td>
-      <td>${escapeHtml(item.summary)}</td>
-      <td>${escapeHtml(item.improvement)}</td>
-    </tr>
+  const statCards = [
+    ['PASS', report.counts.PASS],
+    ['WARN', report.counts.WARN],
+    ['FAIL', report.counts.FAIL],
+    ['Critical', report.counts.Critical],
+    ['Major', report.counts.Major],
+    ['Minor', report.counts.Minor]
+  ].map(([label, value]) => `<div class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
+
+  const resultCards = report.items.map((item, index) => `
+    <article class="result-item">
+      <div class="result-top">
+        <span class="result-number">${String(index + 1).padStart(2, '0')}</span>
+        <div class="result-title">
+          <h3>${escapeHtml(item.name)}</h3>
+          <p>${escapeHtml(item.summary)}</p>
+        </div>
+        <div class="result-badges">
+          <span class="badge badge-${escapeHtml(item.status.toLowerCase())}">${escapeHtml(item.status)}</span>
+          <span class="badge badge-${escapeHtml(item.severity.toLowerCase())}">${escapeHtml(item.severity)}</span>
+        </div>
+      </div>
+      <div class="result-content">
+        <div class="result-field">
+          <strong>핵심 결과</strong>
+          <p>${escapeHtml(item.summary)}</p>
+        </div>
+        <div class="result-field">
+          <strong>개선 방법</strong>
+          <p>${escapeHtml(item.improvement)}</p>
+        </div>
+      </div>
+    </article>
   `).join('');
 
   return `<!DOCTYPE html>
@@ -1261,24 +1286,104 @@ function buildHtmlReport(report) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Web QA Report - ${escapeHtml(report.host)}</title>
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 32px; color: #111827; background: #f5f7fb; }
-    .wrap { max-width: 1100px; margin: 0 auto; background: white; border-radius: 24px; padding: 32px; box-shadow: 0 20px 50px rgba(15,23,42,.1); }
-    .report-head { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 12px 0 28px; border-bottom: 1px solid #e5e7eb; }
-    h1 { margin: 0; font-size: 36px; letter-spacing: -0.04em; text-align: center; }
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 32px;
+      color: #111827;
+      background: #f5f7fb;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(15,23,42,.1);
+    }
+    .report-head {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 0 28px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    h1 { margin: 0; font-size: 34px; letter-spacing: -0.04em; text-align: center; line-height: 1.18; }
     .meta { margin: 0; color: #667085; line-height: 1.7; text-align: center; font-weight: 650; }
-    .score { display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; margin: 8px auto 0; padding: 20px 34px; border-radius: 22px; background: #eff6ff; color: #1d4ed8; font-weight: 900; text-align: center; min-width: 220px; }
+    .score {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin: 8px auto 0;
+      padding: 20px 34px;
+      border-radius: 22px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 900;
+      text-align: center;
+      min-width: 220px;
+    }
     .score span { display: block; text-align: center; }
     .score strong { display: block; font-size: 52px; line-height: 1; color: #111827; text-align: center; }
+    .stats-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin: 24px 0 0; }
+    .stat-card { border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px 12px; text-align: center; background: #f8fafc; }
+    .stat-card span { display: block; color: #667085; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    .stat-card strong { display: block; font-size: 24px; color: #111827; }
     .top-issues { margin: 24px 0 4px; padding: 22px; border: 1px solid #dbeafe; border-radius: 18px; background: #f8fbff; }
-    .top-issues h2 { margin: 0 0 14px; text-align: center; font-size: 22px; }
+    .top-issues h2, .result-section-title { margin: 0 0 14px; text-align: center; font-size: 22px; }
     .top-issues ol { margin: 0; padding-left: 22px; }
     .top-issues li { margin: 0 0 12px; line-height: 1.55; }
     .top-issues span { color: #1d4ed8; font-weight: 800; margin-left: 6px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-    th, td { text-align: left; padding: 14px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
-    th { font-size: 12px; color: #667085; text-transform: uppercase; }
-    td { font-size: 14px; line-height: 1.55; }
-    @media print { body { background: white; padding: 0; } .wrap { box-shadow: none; border-radius: 0; } }
+    .result-section { margin-top: 24px; }
+    .result-list { display: grid; gap: 14px; }
+    .result-item { border: 1px solid #e5e7eb; border-radius: 20px; padding: 18px; background: #ffffff; break-inside: avoid; page-break-inside: avoid; }
+    .result-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+    .result-number { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; border-radius: 14px; background: #eff6ff; color: #2563eb; font-weight: 900; }
+    .result-title h3 { margin: 0; font-size: 18px; line-height: 1.35; }
+    .result-title p { margin: 6px 0 0; color: #475467; line-height: 1.6; }
+    .result-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-height: 28px; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 900; border: 1px solid #e5e7eb; white-space: nowrap; }
+    .badge-pass { color: #059669; background: #dcfce7; border-color: #bbf7d0; }
+    .badge-warn { color: #b45309; background: #fef3c7; border-color: #fde68a; }
+    .badge-fail, .badge-critical { color: #dc2626; background: #fee2e2; border-color: #fecaca; }
+    .badge-major { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
+    .badge-minor { color: #7c3aed; background: #ede9fe; border-color: #ddd6fe; }
+    .badge-none { color: #475467; background: #f1f5f9; border-color: #e2e8f0; }
+    .result-content { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .result-field { border: 1px solid #edf2f7; border-radius: 16px; padding: 14px; background: #f8fafc; }
+    .result-field strong { display: block; margin-bottom: 7px; font-size: 13px; color: #1d4ed8; }
+    .result-field p { margin: 0; color: #334155; line-height: 1.65; }
+    @media (max-width: 760px) {
+      body { padding: 14px; }
+      .wrap { padding: 20px; border-radius: 18px; }
+      h1 { font-size: 26px; }
+      .score { width: 100%; min-width: 0; }
+      .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .result-top { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+      .result-badges { justify-content: center; }
+      .result-content { grid-template-columns: 1fr; }
+      .top-issues { padding: 18px; }
+    }
+    @media print {
+      body { background: #ffffff; padding: 0; font-size: 12px; }
+      .wrap { width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
+      h1 { font-size: 28px; }
+      .score { padding: 16px 28px; }
+      .score strong { font-size: 44px; }
+      .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .top-issues, .result-item { box-shadow: none; }
+      .result-top { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .result-content { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1288,11 +1393,12 @@ function buildHtmlReport(report) {
       <p class="meta">검사 대상: ${escapeHtml(report.url)}<br />검사 시간: ${escapeHtml(report.testedAtLabel)}</p>
       <div class="score"><span>Overall Score</span><strong>${report.score}</strong><span>${escapeHtml(report.status)}</span></div>
     </section>
+    <section class="stats-grid" aria-label="검사 요약 수치">${statCards}</section>
     <section class="top-issues"><h2>우선 수정 권장 이슈</h2><ol>${topRows}</ol></section>
-    <table>
-      <thead><tr><th>검사 항목</th><th>상태</th><th>심각도</th><th>핵심 결과</th><th>개선 방법</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <section class="result-section">
+      <h2 class="result-section-title">항목별 핵심 결과</h2>
+      <div class="result-list">${resultCards}</div>
+    </section>
   </main>
 </body>
 </html>`;
