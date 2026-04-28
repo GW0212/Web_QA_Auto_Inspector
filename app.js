@@ -94,9 +94,17 @@ downloadJson.addEventListener('click', () => {
 });
 
 downloadHtml.addEventListener('click', () => {
-  if (!currentReport) return;
-  downloadFile(`web-qa-report-${dateSlug()}.html`, buildHtmlReport(currentReport), 'text/html');
-  showToast('HTML 리포트를 다운로드했습니다.');
+  if (!currentReport) {
+    showToast('먼저 QA 검사를 실행해 주세요.');
+    return;
+  }
+
+  try {
+    openHtmlReport(currentReport);
+  } catch (error) {
+    console.error('HTML report error:', error);
+    showToast('HTML 리포트 생성 중 오류가 발생했습니다.');
+  }
 });
 
 copySummary.addEventListener('click', async () => {
@@ -112,19 +120,17 @@ copySummary.addEventListener('click', async () => {
 });
 
 downloadPdf.addEventListener('click', () => {
-  if (!currentReport) return;
-  const reportWindow = window.open('', '_blank');
-  if (!reportWindow) {
-    showToast('팝업이 차단되어 HTML 리포트로 저장합니다.');
-    downloadFile(`web-qa-report-${dateSlug()}.html`, buildHtmlReport(currentReport), 'text/html');
+  if (!currentReport) {
+    showToast('먼저 QA 검사를 실행해 주세요.');
     return;
   }
-  reportWindow.document.open();
-  reportWindow.document.write(buildHtmlReport(currentReport));
-  reportWindow.document.close();
-  reportWindow.focus();
-  window.setTimeout(() => reportWindow.print(), 350);
-  showToast('인쇄 창에서 PDF로 저장할 수 있습니다.');
+
+  try {
+    printReportInCurrentPage(currentReport);
+  } catch (error) {
+    console.error('PDF report error:', error);
+    showToast('PDF 저장 준비 중 오류가 발생했습니다. HTML 리포트를 먼저 확인해 주세요.');
+  }
 });
 
 
@@ -1217,6 +1223,144 @@ function downloadFile(filename, content, type) {
   URL.revokeObjectURL(url);
 }
 
+function openHtmlReport(report) {
+  const reportWindow = window.open('', '_blank');
+  const html = buildHtmlReport(report, { showToolbar: true });
+
+  if (reportWindow) {
+    reportWindow.document.open();
+    reportWindow.document.write(html);
+    reportWindow.document.close();
+    reportWindow.focus();
+    showToast('HTML 리포트를 새 탭으로 열었습니다.');
+    return;
+  }
+
+  downloadFile(`web-qa-report-${dateSlug()}.html`, html, 'text/html;charset=utf-8');
+  showToast('새 탭이 차단되어 HTML 파일로 저장했습니다.');
+}
+
+function printReportInCurrentPage(report) {
+  preparePrintReport(report);
+  showToast('PDF 저장 화면을 준비했습니다. 인쇄 창에서 PDF로 저장하세요.');
+  window.setTimeout(() => {
+    window.print();
+  }, 180);
+}
+
+function preparePrintReport(report) {
+  let printRoot = document.getElementById('printReportRoot');
+  if (!printRoot) {
+    printRoot = document.createElement('section');
+    printRoot.id = 'printReportRoot';
+    printRoot.setAttribute('aria-label', 'PDF 저장용 QA 리포트');
+    document.body.appendChild(printRoot);
+  }
+
+  printRoot.innerHTML = buildPrintReportMarkup(report);
+
+  let printStyle = document.getElementById('printReportStyle');
+  if (!printStyle) {
+    printStyle = document.createElement('style');
+    printStyle.id = 'printReportStyle';
+    document.head.appendChild(printStyle);
+  }
+
+  printStyle.textContent = `
+    #printReportRoot { display: none; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      html, body { background: #ffffff !important; width: 100% !important; min-width: 0 !important; }
+      body { margin: 0 !important; padding: 0 !important; overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body > *:not(#printReportRoot) { display: none !important; }
+      #printReportRoot { display: block !important; width: 100% !important; max-width: none !important; color: #111827 !important; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; word-break: keep-all !important; overflow-wrap: break-word !important; }
+      #printReportRoot * { box-sizing: border-box !important; }
+      .print-wrap { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; }
+      .print-head { text-align: center !important; padding: 0 0 18px !important; border-bottom: 1px solid #e5e7eb !important; }
+      .print-head h1 { margin: 0 !important; font-size: 26px !important; line-height: 1.2 !important; letter-spacing: -0.04em !important; }
+      .print-meta { margin: 10px 0 0 !important; color: #475467 !important; line-height: 1.6 !important; font-size: 12px !important; font-weight: 650 !important; }
+      .print-score { width: 210px !important; margin: 16px auto 0 !important; padding: 14px 22px !important; border-radius: 18px !important; background: #eff6ff !important; color: #1d4ed8 !important; text-align: center !important; font-weight: 900 !important; }
+      .print-score span { display: block !important; font-size: 12px !important; }
+      .print-score strong { display: block !important; margin: 4px 0 !important; font-size: 42px !important; line-height: 1 !important; color: #111827 !important; }
+      .print-stats { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; margin: 18px 0 0 !important; }
+      .print-stat { border: 1px solid #e5e7eb !important; border-radius: 14px !important; padding: 10px 8px !important; text-align: center !important; background: #f8fafc !important; }
+      .print-stat span { display: block !important; color: #667085 !important; font-size: 10px !important; font-weight: 900 !important; }
+      .print-stat strong { display: block !important; margin-top: 4px !important; font-size: 22px !important; color: #111827 !important; }
+      .print-priority, .print-results { margin-top: 18px !important; }
+      .print-priority { padding: 16px !important; border: 1px solid #dbeafe !important; border-radius: 16px !important; background: #f8fbff !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+      .print-priority h2, .print-results h2 { margin: 0 0 12px !important; text-align: center !important; font-size: 18px !important; }
+      .print-priority ol { margin: 0 !important; padding-left: 18px !important; }
+      .print-priority li { margin-bottom: 9px !important; line-height: 1.5 !important; font-size: 12px !important; }
+      .print-priority p { margin: 4px 0 0 !important; color: #334155 !important; }
+      .print-result-list { display: grid !important; gap: 10px !important; }
+      .print-result { border: 1px solid #e5e7eb !important; border-radius: 16px !important; padding: 14px !important; background: #ffffff !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+      .print-result-top { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto !important; gap: 10px !important; align-items: start !important; }
+      .print-num { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 34px !important; height: 34px !important; border-radius: 12px !important; background: #eff6ff !important; color: #2563eb !important; font-size: 12px !important; font-weight: 900 !important; }
+      .print-title h3 { margin: 0 !important; font-size: 15px !important; line-height: 1.35 !important; }
+      .print-title p { margin: 4px 0 0 !important; color: #475467 !important; line-height: 1.5 !important; font-size: 12px !important; }
+      .print-badges { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; justify-content: flex-end !important; }
+      .print-badge { display: inline-flex !important; align-items: center !important; justify-content: center !important; min-height: 24px !important; padding: 4px 8px !important; border-radius: 999px !important; border: 1px solid #e5e7eb !important; white-space: nowrap !important; font-size: 10px !important; font-weight: 900 !important; }
+      .print-badge-pass { color: #059669 !important; background: #dcfce7 !important; border-color: #bbf7d0 !important; }
+      .print-badge-warn { color: #b45309 !important; background: #fef3c7 !important; border-color: #fde68a !important; }
+      .print-badge-fail, .print-badge-critical { color: #dc2626 !important; background: #fee2e2 !important; border-color: #fecaca !important; }
+      .print-badge-major { color: #1d4ed8 !important; background: #dbeafe !important; border-color: #bfdbfe !important; }
+      .print-badge-minor { color: #7c3aed !important; background: #ede9fe !important; border-color: #ddd6fe !important; }
+      .print-badge-none { color: #475467 !important; background: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+      .print-fields { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-top: 10px !important; }
+      .print-field { border: 1px solid #edf2f7 !important; border-radius: 12px !important; padding: 10px !important; background: #f8fafc !important; }
+      .print-field strong { display: block !important; margin-bottom: 5px !important; color: #1d4ed8 !important; font-size: 11px !important; }
+      .print-field p { margin: 0 !important; color: #334155 !important; line-height: 1.55 !important; font-size: 12px !important; }
+    }
+  `;
+}
+
+function buildPrintReportMarkup(report) {
+  const topRows = report.items
+    .filter((item) => item.status !== 'PASS' || item.severity !== 'None')
+    .slice(0, 5)
+    .map((item) => `<li><strong>${escapeHtml(item.name)}</strong> <span>${escapeHtml(item.status)} / ${escapeHtml(item.severity)}</span><p>${escapeHtml(item.summary)}</p></li>`)
+    .join('') || '<li><strong>우선 수정 필요 이슈 없음</strong><p>현재 결과 기준으로 선행 조치 항목은 없습니다.</p></li>';
+
+  const statCards = [
+    ['PASS', report.summary.PASS],
+    ['WARN', report.summary.WARN],
+    ['FAIL', report.summary.FAIL],
+    ['Critical', report.summary.Critical],
+    ['Major', report.summary.Major],
+    ['Minor', report.summary.Minor]
+  ].map(([label, value]) => `<div class="print-stat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
+
+  const resultCards = report.items.map((item, index) => `
+    <article class="print-result">
+      <div class="print-result-top">
+        <span class="print-num">${String(index + 1).padStart(2, '0')}</span>
+        <div class="print-title"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.summary)}</p></div>
+        <div class="print-badges">
+          <span class="print-badge print-badge-${escapeHtml(item.status.toLowerCase())}">${escapeHtml(item.status)}</span>
+          <span class="print-badge print-badge-${escapeHtml(item.severity.toLowerCase())}">${escapeHtml(item.severity)}</span>
+        </div>
+      </div>
+      <div class="print-fields">
+        <div class="print-field"><strong>핵심 결과</strong><p>${escapeHtml(item.summary)}</p></div>
+        <div class="print-field"><strong>개선 방법</strong><p>${escapeHtml(item.improvement)}</p></div>
+      </div>
+    </article>
+  `).join('');
+
+  return `
+    <div class="print-wrap">
+      <section class="print-head">
+        <h1>Web QA Auto Inspector Report</h1>
+        <p class="print-meta">검사 대상: ${escapeHtml(report.url)}<br />검사 시간: ${escapeHtml(report.testedAtLabel)}</p>
+        <div class="print-score"><span>Overall Score</span><strong>${report.score}</strong><span>${escapeHtml(report.status)}</span></div>
+      </section>
+      <section class="print-stats" aria-label="검사 요약 수치">${statCards}</section>
+      <section class="print-priority"><h2>우선 수정 권장 이슈</h2><ol>${topRows}</ol></section>
+      <section class="print-results"><h2>항목별 핵심 결과</h2><div class="print-result-list">${resultCards}</div></section>
+    </div>
+  `;
+}
+
 function buildPlainSummary(report) {
   const topIssues = report.items
     .filter((item) => item.status !== 'PASS' || item.severity !== 'None')
@@ -1237,7 +1381,7 @@ function buildPlainSummary(report) {
   ].join('\n');
 }
 
-function buildHtmlReport(report) {
+function buildHtmlReport(report, options = {}) {
   const topRows = report.items
     .filter((item) => item.status !== 'PASS' || item.severity !== 'None')
     .slice(0, 5)
@@ -1245,12 +1389,12 @@ function buildHtmlReport(report) {
     .join('') || '<li><strong>우선 수정 필요 이슈 없음</strong><p>현재 결과 기준으로 선행 조치 항목은 없습니다.</p></li>';
 
   const statCards = [
-    ['PASS', report.counts.PASS],
-    ['WARN', report.counts.WARN],
-    ['FAIL', report.counts.FAIL],
-    ['Critical', report.counts.Critical],
-    ['Major', report.counts.Major],
-    ['Minor', report.counts.Minor]
+    ['PASS', report.summary.PASS],
+    ['WARN', report.summary.WARN],
+    ['FAIL', report.summary.FAIL],
+    ['Critical', report.summary.Critical],
+    ['Major', report.summary.Major],
+    ['Minor', report.summary.Minor]
   ].map(([label, value]) => `<div class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
 
   const resultCards = report.items.map((item, index) => `
@@ -1279,6 +1423,16 @@ function buildHtmlReport(report) {
     </article>
   `).join('');
 
+  const toolbar = options.showToolbar ? `
+    <div class="report-toolbar no-print">
+      <strong>Web QA Auto Inspector Report</strong>
+      <div>
+        <button type="button" onclick="window.print()">PDF 저장/인쇄</button>
+        <button type="button" onclick="window.close()">닫기</button>
+      </div>
+    </div>
+  ` : '';
+
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1305,6 +1459,34 @@ function buildHtmlReport(report) {
       padding: 32px;
       box-shadow: 0 20px 50px rgba(15,23,42,.1);
     }
+    .report-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: -12px -12px 22px;
+      padding: 14px 16px;
+      border: 1px solid #dbeafe;
+      border-radius: 18px;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 30px rgba(15,23,42,.08);
+    }
+    .report-toolbar strong { color: #111827; }
+    .report-toolbar div { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .report-toolbar button {
+      border: 1px solid #dbe3ef;
+      border-radius: 999px;
+      padding: 9px 13px;
+      background: #ffffff;
+      color: #111827;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .report-toolbar button:first-child { background: #2563eb; color: #ffffff; border-color: #2563eb; }
     .report-head {
       text-align: center;
       display: flex;
@@ -1374,6 +1556,7 @@ function buildHtmlReport(report) {
       .top-issues { padding: 18px; }
     }
     @media print {
+      .no-print { display: none !important; }
       body { background: #ffffff; padding: 0; font-size: 12px; }
       .wrap { width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
       h1 { font-size: 28px; }
@@ -1387,6 +1570,7 @@ function buildHtmlReport(report) {
   </style>
 </head>
 <body>
+  ${toolbar}
   <main class="wrap">
     <section class="report-head">
       <h1>Web QA Auto Inspector Report</h1>
